@@ -256,5 +256,3 @@ complete, reproducible projects.
 </p>
 
 ---
-
-*«Getting code from AI doesn't mean you understand it.»*
