@@ -45,44 +45,34 @@ building reliable systems since 2024
 
 #### ⚡ [epoll-server](https://github.com/CreatorShyMoon/epoll-server) — высокопроизводительный TCP-сервер
 
-Однопоточный TCP-сервер на **reactor-паттерне** поверх `epoll(7)` с текстовым протоколом
-(`PING`/`ECHO`/`UPPER`/`QUIT`). Неблокирующий I/O с буферизацией на каждое соединение,
-`eventfd` для остановки цикла и `signalfd` для graceful shutdown. Логика протокола — чистая
-функция, поэтому она покрыта unit-тестами и фаззингом без сети. Вокруг — полный GitLab CI:
-линтеры, матрица gcc/clang с `-Werror`, clang-tidy + cppcheck, покрытие через gcovr,
-ASan/UBSan/TSan, libFuzzer и упаковка.
+TCP-сервер в одном потоке на `epoll(7)`: тысячи соединений, текстовый протокол
+`PING`/`ECHO`/`UPPER`/`QUIT`. Реализация — reactor-паттерн и неблокирующий I/O (`eventfd`,
+`signalfd`), логика протокола вынесена в чистую функцию и покрыта тестами и фаззингом.
+GitLab CI: линтеры, матрица gcc/clang, санитайзеры, покрытие, libFuzzer.
 
 `C++20` `epoll` `eventfd` `signalfd` `CMake` `GoogleTest` `libFuzzer` `Docker` `GitLab CI`
 
 #### 📦 [mini-runtime](https://github.com/CreatorShyMoon/mini-runtime) — контейнерный рантайм
 
-Мини-рантайм контейнеров — ядро Docker примерно в 1000 строк на C++. Изоляция через
-**namespaces** на `clone(2)` (PID/MNT/UTS/IPC, опционально NET), файловая система через
-`pivot_root` со свежими `/proc`, `/dev` (devtmpfs) и `/sys` только для чтения, лимиты через
-**cgroups v2** (`memory.max`, `pids.max`, `cpu.max`) и полный сброс **capabilities** с
-`PR_SET_NO_NEW_PRIVS`. Плюс честный **PID 1**: собирает зомби и форвардит сигналы в
-process-group контейнера.
+Запускает процесс в изолированном окружении — как Docker, но в миниатюре (~1000 строк C++).
+Изоляция — namespaces через `clone(2)` и `pivot_root`, лимиты — cgroups v2, плюс сброс
+capabilities и PID 1, который собирает зомби и forwarding сигналы.
 
 `C++20` `namespaces` `cgroups v2` `pivot_root` `capabilities` `CMake` `GoogleTest` `Docker`
 
 #### 🖥️ [TUIOpenMath](https://github.com/CreatorShyMoon/TUIOpenMath) — менеджер открытой математической среды
 
-Терминальный TUI на **C11** и **ncurses**, разворачивающий чистый Linux в готовую среду для
-вычислений: **7 встроенных профилей**, изолированные Python-venv, Julia LTS/Stable, JupyterLab
-в отдельном runtime и зарегистрированные Jupyter-ядра Python, Julia, Bash, Octave и Scilab.
-
-Установки идут асинхронно через `fork` / `pipe` / `waitpid` и построчно стримятся в живую
-log-панель; диагностика проверяет только компоненты активного профиля. Управление — полностью
-с клавиатуры, без графики, работает по SSH.
+Ставит на чистый Linux математическую среду: Python, Julia и JupyterLab с ядрами
+Python, Julia, Bash, Octave и Scilab. TUI на ncurses: 7 профилей, изолированные venv,
+установки асинхронно через `fork`/`pipe`/`waitpid` в живую лог-панель; всё с клавиатуры,
+работает по SSH.
 
 `C11` `ncurses` `JupyterLab` `Julia` `Python venv` `Jupyter kernels` `cJSON` `MIT`
 
 #### ☕ [todo-api](https://github.com/CreatorShyMoon/todo-api) — REST API для задач
 
-REST API на **Java 21** и **Spring Boot 3.4**: **Spring Security + JWT**, Spring Data JPA /
-Hibernate, PostgreSQL в проде и in-memory H2 в dev-профиле — запускается без инфраструктуры
-одной командой. Покрыт тестами на **JUnit 5 + Mockito**, поднимается через Docker Compose
-и отдаёт собственный статический веб-клиент прямо со Spring.
+REST API для задач с JWT-аутентификацией. Spring Security + JPA/Hibernate, PostgreSQL в
+проде и H2 в dev (старт одной командой), тесты JUnit 5 + Mockito, запуск через Docker Compose.
 
 `Java 21` `Spring Boot` `Spring Security` `JWT` `JPA/Hibernate` `PostgreSQL` `H2` `JUnit 5` `Docker Compose`
 
@@ -161,45 +151,33 @@ so nothing depends on manual steps.
 
 #### ⚡ [epoll-server](https://github.com/CreatorShyMoon/epoll-server) — high-performance TCP server
 
-Single-threaded TCP server built on the **reactor pattern** over `epoll(7)` with a text
-protocol (`PING`/`ECHO`/`UPPER`/`QUIT`). Non-blocking I/O with per-connection buffering,
-`eventfd` for loop wakeup and `signalfd` for graceful shutdown. Protocol logic is a pure
-function, so it is unit-tested and fuzzed without touching the network. Wrapped in a full
-GitLab CI pipeline: linting, gcc/clang matrix with `-Werror`, clang-tidy + cppcheck, gcovr
-coverage, ASan/UBSan/TSan, libFuzzer and packaging.
+Single-threaded TCP server on `epoll(7)`: thousands of connections over the text protocol
+`PING`/`ECHO`/`UPPER`/`QUIT`. Reactor pattern with non-blocking I/O (`eventfd`, `signalfd`);
+protocol logic is a pure function covered by unit tests and fuzzing. GitLab CI: lint,
+gcc/clang matrix, sanitizers, coverage, libFuzzer.
 
 `C++20` `epoll` `eventfd` `signalfd` `CMake` `GoogleTest` `libFuzzer` `Docker` `GitLab CI`
 
 #### 📦 [mini-runtime](https://github.com/CreatorShyMoon/mini-runtime) — container runtime
 
-A tiny container runtime — the core of Docker in about 1k lines of C++. Isolation via
-`clone(2)` **namespaces** (PID/MNT/UTS/IPC, optional NET), filesystem view via `pivot_root`
-with a fresh `/proc`, `/dev` (devtmpfs) and read-only `/sys`, resource limits via
-**cgroups v2** (`memory.max`, `pids.max`, `cpu.max`) and full **capability** dropping with
-`PR_SET_NO_NEW_PRIVS`. Plus it behaves as a proper **PID 1**: it reaps zombies and forwards
-signals to the container's process group.
+Runs a process in an isolated environment — what Docker does, in miniature (~1k lines of
+C++). Namespaces via `clone(2)` and `pivot_root` for the filesystem, cgroups v2 limits,
+capability dropping, plus PID 1 semantics: zombie reaping and signal forwarding.
 
 `C++20` `namespaces` `cgroups v2` `pivot_root` `capabilities` `CMake` `GoogleTest` `Docker`
 
 #### 🖥️ [TUIOpenMath](https://github.com/CreatorShyMoon/TUIOpenMath) — open math environment manager
 
-A terminal TUI in **C11** + **ncurses** that turns a bare Linux machine into a ready-to-use
-computational environment: **7 built-in profiles**, isolated Python venvs, Julia LTS/Stable,
-JupyterLab in a dedicated runtime, and registered Jupyter kernels for Python, Julia, Bash,
-Octave and Scilab.
-
-Long installs run asynchronously via `fork` / `pipe` / `waitpid` and stream line by line into a
-live log panel; diagnostics check only the active profile's components. Everything is driven
-from the keyboard — no GUI, works over SSH.
+Installs a math environment on a bare Linux box: Python, Julia and JupyterLab with
+Python/Julia/Bash/Octave/Scilab kernels. ncurses TUI: 7 profiles, isolated venvs, async
+installs via `fork`/`pipe`/`waitpid` into a live log panel; keyboard-only, works over SSH.
 
 `C11` `ncurses` `JupyterLab` `Julia` `Python venv` `Jupyter kernels` `cJSON` `MIT`
 
 #### ☕ [todo-api](https://github.com/CreatorShyMoon/todo-api) — task REST API
 
-REST API on **Java 21** and **Spring Boot 3.4**: **Spring Security + JWT**, Spring Data JPA /
-Hibernate, PostgreSQL in production and in-memory H2 behind a dev profile — boots with zero
-infrastructure in a single command. Covered by **JUnit 5 + Mockito** tests, starts via Docker
-Compose, and ships its own static web client served straight by Spring.
+Task REST API with JWT auth. Spring Security + JPA/Hibernate, PostgreSQL in prod, H2 in dev
+(single-command start), JUnit 5 + Mockito tests, Docker Compose.
 
 `Java 21` `Spring Boot` `Spring Security` `JWT` `JPA/Hibernate` `PostgreSQL` `H2` `JUnit 5` `Docker Compose`
 
