@@ -11,38 +11,25 @@ albert@linux:~$ uptime
 building reliable systems since 2024
 ```
 
-**Systems Software Engineer** из Краснодара. Пишу низкоуровневый софт под Linux и собираю инфраструктуру вокруг него: контейнеры, CI/CD, воспроизводимые окружения. Сейчас двигаюсь в сторону DevOps — Linux, systemd, Nginx, мониторинг, логи и Kubernetes.
+Пишу системный софт на **C/C++** под Linux и строю инфраструктуру вокруг него: контейнеры, CI/CD и воспроизводимые окружения.
 
-Не коллекционирую технологии. Собираю системы, которые можно понять, проверить и воспроизвести.
+---
+
+## Обо мне
+
+Мне интересно, как всё устроено под капотом — сисколлы, ядро, сборка, сеть. Поэтому я не останавливаюсь на использовании инструмента: разбираю его до уровня, на котором могу собрать что-то своё.
+
+Люблю проекты, где можно пройти путь до конца: от архитектуры и кода до тестов, CI, Docker-образа и документации.
+
+**Принципы:** понять уровень ниже · автоматизировать повторяющееся · доказывать тестами · оставлять след.
 
 ---
 
 ## Сейчас
 
-- Собираю **DevOps-лабораторию** по собственной дорожной карте: Linux VM, SSH, systemd, Nginx, CI/CD, Prometheus/Grafana, Loki, k3s.
+- Собираю **DevOps-лабораторию**: Linux, systemd, Nginx, CI/CD, мониторинг, логи и k3s.
 - Довожу **mini-runtime** — контейнерный рантайм на C++20, который показывает, что Docker делает на уровне сисколлов.
-- Развиваю **epoll-server** — однопоточный TCP-сервер на reactor-паттерне с полным CI.
-- Веду инженерные заметки: архитектурные решения, диагностика, разборы ошибок и документация к проектам.
-
----
-
-## Как я работаю
-
-1. **Спускаюсь на уровень ниже.** Мне важно понимать не только `docker run`, но и `namespaces`, `cgroups`, `pivot_root` и `capabilities`.
-2. **Автоматизирую повторяющееся.** Если действие делается второй раз руками — оно должно стать скриптом, pipeline или конфигурацией.
-3. **Доказываю качество.** Тесты, санитайзеры, статический анализ, фаззинг и CI для меня не галочка, а способ не врать самому себе.
-4. **Оставляю след.** README, схемы, runbook и заметки должны позволить другому человеку повторить результат без меня.
-
----
-
-## Лаборатория
-
-| Проект | Что это | Стек |
-|---|---|---|
-| [epoll-server](https://github.com/CreatorShyMoon/epoll-server) | Высокопроизводительный TCP-сервер на reactor-паттерне | C++20, epoll, eventfd, signalfd, CMake |
-| [mini-runtime](https://github.com/CreatorShyMoon/mini-runtime) | Контейнерный рантайм: namespaces, cgroups v2, pivot_root, capabilities | C++20, Linux, CMake |
-| [TUIOpenMath](https://github.com/CreatorShyMoon/TUIOpenMath) | Терминальный менеджер математической среды | C11, ncurses, JupyterLab, Julia |
-| [todo-api](https://github.com/CreatorShyMoon/todo-api) | REST API с JWT, PostgreSQL и Docker Compose | Java 21, Spring Boot, JPA, JUnit |
+- Развиваю **epoll-server** — TCP-сервер на reactor-паттерне с тестами, санитайзерами и фаззингом.
 
 ---
 
@@ -50,15 +37,9 @@ building reliable systems since 2024
 
 ### [epoll-server](https://github.com/CreatorShyMoon/epoll-server) — высокопроизводительный TCP-сервер
 
-Однопоточный сервер на reactor-паттерне поверх `epoll(7)`. Обслуживает множество соединений без создания отдельного потока под каждого клиента.
+Однопоточный сервер на reactor-паттерне поверх `epoll(7)`: неблокирующий I/O, буферизация на каждое соединение, `eventfd` для остановки цикла и `signalfd` для graceful shutdown.
 
-**Что внутри:**
-- неблокирующий I/O и буферизация на каждое соединение;
-- `eventfd` для остановки event loop и `signalfd` для graceful shutdown;
-- текстовый протокол `PING` / `ECHO` / `UPPER` / `QUIT`;
-- логика протокола вынесена в чистую функцию и тестируется без сети.
-
-**Проверка:** 13 тестов, ASan/UBSan/TSan, `clang-tidy`, `cppcheck`, `libFuzzer`, матрица gcc/clang, GitHub Actions.
+Логика протокола вынесена в чистую функцию и покрыта unit-тестами и фаззингом. Вокруг — GitLab CI: линтеры, матрица gcc/clang, ASan/UBSan/TSan, `clang-tidy`, `cppcheck` и `libFuzzer`.
 
 `C++20` `epoll` `eventfd` `signalfd` `CMake` `GoogleTest` `libFuzzer`
 
@@ -68,31 +49,17 @@ building reliable systems since 2024
 
 Мини-рантайм контейнеров на C++20 — попытка понять, как устроен Docker, и собрать его ядро самостоятельно.
 
-**Что внутри:**
-- изоляция через `clone(2)` и Linux namespaces: PID, MNT, UTS, IPC, опционально NET;
-- файловая система через `pivot_root`, свежие `/proc`, `/dev` и read-only `/sys`;
-- лимиты через `cgroups v2`: `memory.max`, `pids.max`, `cpu.max`;
-- сброс capabilities и `PR_SET_NO_NEW_PRIVS`;
-- поведение PID 1: сбор зомби и forwarding сигналов в process group контейнера.
-
-**Проверка:** 19 тестов, включая интеграционные с реальной изоляцией, ASan/UBSan, сборка gcc/clang, GitHub Actions.
+Изоляция через `clone(2)` и namespaces, файловая система через `pivot_root`, лимиты через cgroups v2, сброс capabilities и честный PID 1: сбор зомби и forwarding сигналов в process group контейнера. Покрыт тестами, включая интеграционные с реальной изоляцией.
 
 `C++20` `namespaces` `cgroups v2` `pivot_root` `capabilities` `CMake` `GoogleTest`
 
 ---
 
-### [TUIOpenMath](https://github.com/CreatorShyMoon/TUIOpenMath) — менеджер открытой математической среды
+### [TUIOpenMath](https://github.com/CreatorShyMoon/TUIOpenMath) — среда для вычислений в терминале
 
-Терминальный TUI на C11 и ncurses, который превращает чистый Linux в готовую среду для вычислений.
+Терминальный TUI на **C11** и **ncurses**, который превращает чистый Linux в готовую среду для вычислений: 7 профилей, изолированные Python venv, Julia LTS/Stable и JupyterLab.
 
-**Что внутри:**
-- 7 встроенных профилей;
-- изолированные Python venv, Julia LTS/Stable, JupyterLab;
-- Jupyter-ядра для Python, Julia, Bash, Octave и Scilab;
-- асинхронные установки через `fork` / `pipe` / `waitpid` и живая лог-панель;
-- полностью клавиатурное управление, работает по SSH.
-
-**Проверка:** сборка gcc/clang, `cppcheck`, GitHub Actions.
+Установки идут асинхронно через `fork` / `pipe` / `waitpid` и стримятся в живую лог-панель. Управление полностью с клавиатуры, без графики — работает по SSH.
 
 `C11` `ncurses` `JupyterLab` `Julia` `Python venv` `cJSON`
 
@@ -100,20 +67,50 @@ building reliable systems since 2024
 
 ### [todo-api](https://github.com/CreatorShyMoon/todo-api) — REST API для задач
 
-Spring Boot-приложение с аутентификацией, базой данных и Docker Compose.
-
-**Что внутри:**
-- Spring Security + JWT;
-- Spring Data JPA / Hibernate;
-- PostgreSQL в production-профиле и H2 в dev;
-- JUnit 5 + Mockito;
-- статический веб-клиент, который отдаёт сам Spring.
+Spring Boot-приложение с **Spring Security + JWT**, Spring Data JPA / Hibernate и PostgreSQL в production-профиле. Поднимается через Docker Compose, покрыто тестами на JUnit 5 + Mockito и отдаёт собственный статический веб-клиент.
 
 `Java 21` `Spring Boot` `Spring Security` `JWT` `PostgreSQL` `Docker Compose`
 
 ---
 
+### [machine-translation](https://github.com/CreatorShyMoon/machine-translation) — генератор заданий
+
+Приложение на **C**, которое генерирует индивидуальные задания по теме машинного представления вещественных чисел: IEEE 754, битовые операции и аккуратный ввод-вывод.
+
+`C` `IEEE 754`
+
+---
+
+### [MatrixLibMultiply3](https://github.com/CreatorShyMoon/MatrixLibMultiply3) — умножение матриц
+
+Библиотека на **C++** для быстрого умножения матриц любого размера: алгоритмы с учётом кэша вместо наивного тройного цикла.
+
+`C++` `алгоритмы` `производительность`
+
+---
+
+### [GameTurn-BasedCombat](https://github.com/CreatorShyMoon/GameTurn-BasedCombat) — пошаговая RPG
+
+Консольная пошаговая RPG на карте 15×15 на **C++**, построенная на паттернах «Стратегия» и «Фабрика» для действий персонажа.
+
+`C++` `ООП` `паттерны проектирования`
+
+---
+
 ## Стек
+
+<p>
+  <img src="https://img.shields.io/badge/C-00599C?style=flat-square&logo=c&logoColor=white" alt="C">
+  <img src="https://img.shields.io/badge/C%2B%2B-00599C?style=flat-square&logo=cplusplus&logoColor=white" alt="C++">
+  <img src="https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black" alt="Linux">
+  <img src="https://img.shields.io/badge/Bash-4EAA25?style=flat-square&logo=gnubash&logoColor=white" alt="Bash">
+  <img src="https://img.shields.io/badge/CMake-064F8C?style=flat-square&logo=cmake&logoColor=white" alt="CMake">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/GitLab%20CI-FC6D26?style=flat-square&logo=gitlab&logoColor=white" alt="GitLab CI">
+  <img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white" alt="GitHub Actions">
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Java-ED8B00?style=flat-square&logo=openjdk&logoColor=white" alt="Java">
+</p>
 
 **Systems:** C, C++20, POSIX, Linux, epoll, namespaces, cgroups, pivot_root, capabilities, signals, pthread
 
@@ -123,15 +120,7 @@ Spring Boot-приложение с аутентификацией, базой �
 
 **Backend:** Java 21, Spring Boot, Spring Security, JWT, JPA/Hibernate, JUnit 5, Mockito
 
-**Сейчас изучаю:** Ansible, Prometheus/Grafana, Loki, k3s, Terraform
-
----
-
-## CI
-
-[epoll-server](https://github.com/CreatorShyMoon/epoll-server/actions) · [mini-runtime](https://github.com/CreatorShyMoon/mini-runtime/actions) · [TUIOpenMath](https://github.com/CreatorShyMoon/TUIOpenMath/actions)
-
-Все три системных проекта собираются и проверяются автоматически.
+**Изучаю:** Ansible, Prometheus/Grafana, Loki, k3s, Terraform
 
 ---
 
@@ -140,22 +129,20 @@ Spring Boot-приложение с аутентификацией, базой �
 
 ### About
 
-**Systems Software Engineer** based in Krasnodar, Russia. I build low-level Linux software in C/C++ and the infrastructure around it: containers, CI/CD and reproducible environments. Currently expanding into DevOps: Linux administration, systemd, Nginx, observability and Kubernetes.
+I write systems software in **C/C++** for Linux and build the infrastructure around it: containers, CI/CD and reproducible environments. I like understanding how things work under the hood — syscalls, the kernel, the build system — and then automating them so nothing depends on manual steps.
 
-I do not collect technologies. I build systems that can be understood, verified and reproduced.
+I enjoy projects where I can go all the way: architecture, code, tests, CI, Docker image and documentation.
 
 ### Selected work
 
-- **[epoll-server](https://github.com/CreatorShyMoon/epoll-server)** — single-threaded TCP server built on the reactor pattern over `epoll(7)`. Non-blocking I/O, `eventfd`, `signalfd`, 13 tests, sanitizers, fuzzing and CI.
-- **[mini-runtime](https://github.com/CreatorShyMoon/mini-runtime)** — container runtime in C++20. Linux namespaces, `cgroups v2`, `pivot_root`, capability dropping, PID 1 semantics and 19 tests.
+- **[epoll-server](https://github.com/CreatorShyMoon/epoll-server)** — single-threaded TCP server on the reactor pattern over `epoll(7)`. Non-blocking I/O, `eventfd`, `signalfd`, unit tests, sanitizers, fuzzing and GitLab CI.
+- **[mini-runtime](https://github.com/CreatorShyMoon/mini-runtime)** — container runtime in C++20. Linux namespaces, `cgroups v2`, `pivot_root`, capability dropping and PID 1 semantics.
 - **[TUIOpenMath](https://github.com/CreatorShyMoon/TUIOpenMath)** — terminal TUI in C11 and ncurses for setting up a reproducible math environment.
 - **[todo-api](https://github.com/CreatorShyMoon/todo-api)** — Spring Boot REST API with JWT, PostgreSQL and Docker Compose.
 
 ### Stack
 
 C/C++20, Linux, POSIX, epoll, namespaces, cgroups, Docker, GitLab CI, GitHub Actions, Nginx, systemd, Bash, PostgreSQL, Java/Spring Boot, CMake, GoogleTest, ASan/UBSan/TSan, libFuzzer.
-
-Open to full-time and freelance opportunities around Linux, C/C++ and DevOps.
 
 </details>
 
@@ -164,5 +151,3 @@ Open to full-time and freelance opportunities around Linux, C/C++ and DevOps.
 ## Контакты
 
 [Email](mailto:albertadaman70@gmail.com) · [Telegram](https://t.me/moon_dsdsdsss) · [GitLab](https://gitlab.com/CreatorShyMoon) · [Все репозитории](https://github.com/CreatorShyMoon?tab=repositories)
-
-Краснодар · удалённо / гибрид · русский (родной), английский (B1)
