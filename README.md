@@ -25,14 +25,6 @@ building reliable systems since 2024
 
 ---
 
-## Сейчас
-
-- Собираю **DevOps-лабораторию**: Linux, systemd, Nginx, CI/CD, мониторинг, логи и k3s.
-- Довожу **mini-runtime** — контейнерный рантайм на C++20, который показывает, что Docker делает на уровне сисколлов.
-- Развиваю **epoll-server** — TCP-сервер на reactor-паттерне с тестами, санитайзерами и фаззингом.
-
----
-
 ## Избранные проекты
 
 ### [epoll-server](https://github.com/CreatorShyMoon/epoll-server) — высокопроизводительный TCP-сервер
