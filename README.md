@@ -8,7 +8,7 @@ albert@linux:~$ cat /etc/focus
 Linux internals · C/C++ · Air-Gapped infra · containers · CI/CD
 
 albert@linux:~$ uptime
-building reliable systems since 2024
+building reliable systems since 2023
 ```
 
 <p align="center">
